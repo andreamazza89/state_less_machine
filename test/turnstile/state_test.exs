@@ -1,49 +1,33 @@
-defmodule TurnstileStateTest do
+defmodule TurnstileStateProcessorTest do
   use ExUnit.Case
-  import Turnstile.State
-
-  test "it can be started in the locked state" do
-    state_id = begin(:locked)
-
-    assert current_state(state_id) === :locked
-  end
-
-  test "it can be started in the open state" do
-    state_id = begin(:open)
-
-    assert current_state(state_id) === :open
-  end
+  import Turnstile.StateProcessor
 
   test "it goes locked->open when paid" do
-    state_id = begin(:locked)
+    current_state = :locked
+    new_state = process(current_state, :paid)
 
-    update_state_with_input(state_id, :paid)
-
-    assert current_state(state_id) === :open
+    assert new_state === :open
   end
 
-  test "it stays open if paying again" do
-    state_id = begin(:open)
+  test "it flags the refund required if already paid" do
+    current_state = :open
+    new_state = process(current_state, :paid)
 
-    update_state_with_input(state_id, :paid)
-
-    assert current_state(state_id) === :open
+    assert new_state === {:open, :refund}
   end
 
   test "it goes open->locked after a push" do
-    state_id = begin(:open)
+    current_state = :open
+    new_state = process(current_state, :push)
 
-    update_state_with_input(state_id, :push)
-
-    assert current_state(state_id) === :locked
+    assert new_state === :locked
   end
 
   test "it stays locked if there is a push" do
-    state_id = begin(:locked)
+    current_state = :locked
+    new_state = process(current_state, :push)
 
-    update_state_with_input(state_id, :push)
-
-    assert current_state(state_id) === :locked
+    assert new_state === :locked
   end
 
 end
