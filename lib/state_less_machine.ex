@@ -1,0 +1,2 @@
+defmodule StateLessMachine do
+end
